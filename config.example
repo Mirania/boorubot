@@ -1,0 +1,16 @@
+Your firebase instance should contain a configuration object at the path "booru/config".
+Here's an example of what that object could look like:
+
+{
+    server: "5051602553834176512",
+    repost: [
+        { tag: "1girl", channel: "24413298558398993408" },
+        { tag: "1boy", channel: "5441329448398993243" }
+    ],
+    bannedTags: [
+        'comic',
+        'monochrome',
+        'animated',
+        'video'
+    ]
+}
