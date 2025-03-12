@@ -24,8 +24,8 @@ bot.on("ready", async () => {
     console.log("Bot is online.");
 
     const configs: BooruConfig = await get("booru/config");
-    checkGelbooru(configs); setTimeout(() => checkGelbooru(configs), minutes(15));
-    //checkDanbooru(configs); setTimeout(() => checkDanbooru(configs), minutes(15));
+    checkGelbooru(configs); setInterval(() => checkGelbooru(configs), minutes(15));
+    //checkDanbooru(configs); setInterval(() => checkDanbooru(configs), minutes(15));
 })
 
 export function self(): discord.Client {
