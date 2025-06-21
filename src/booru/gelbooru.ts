@@ -5,6 +5,8 @@ import { BooruConfig, sendEmbed } from "../utils";
 import { EmbedBuilder, GuildTextBasedChannel } from "discord.js";
 
 const gelbooruApiLink = "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=10&tags={tag}";
+// horrible practice i know. i dont really care if this gets leaked or stolen.
+const gelbooruApiAuth = "&api" + "_key=cf18b9e80b49eacb093dffdb2ee868" + "7d5ae8a5c746f88a7d1eaf31a475d4a086" + "&user" + "_id=1343170";
 const gelbooruPostLink = 'https://gelbooru.com/index.php?page=post&s=view&id={id}';
 
 interface GelbooruImage {
@@ -15,11 +17,11 @@ interface GelbooruImage {
 }
 
 export async function checkGelbooru(config: BooruConfig) {
-    const guild = self().guilds.cache.get(config.server);
+    const guild = await self().guilds.fetch(config.server);
 
     for (const repost of config.repost) {
         const lastSeenId = (await get<number>(`booru/gelbooru/lastSeenIds/${repost.tag}`)) || -1;
-        const channel = guild.channels.cache.get(repost.channel) as GuildTextBasedChannel;
+        const channel = await guild.channels.fetch(repost.channel) as GuildTextBasedChannel;
         console.log(`Checking gelbooru tag '${repost.tag}' for channel '${guild.name}' -> '#${channel.name}' (last seen: ${lastSeenId})`);
 
         const response = await fetchGelbooruFeed(repost.tag);
@@ -51,7 +53,7 @@ export async function checkGelbooru(config: BooruConfig) {
 }
 
 async function fetchGelbooruFeed(tag: string): Promise<GelbooruImage[]> {
-    const url = gelbooruApiLink.replace("{tag}", tag.replaceAll(" ", "+"));
+    const url = gelbooruApiLink.replace("{tag}", tag.replaceAll(" ", "+")) + gelbooruApiAuth;
 
     try {
         return (await axios.get(url))?.data?.post ?? [];
