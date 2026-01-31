@@ -7,12 +7,11 @@ export type BooruConfig = {
 };
 
 export async function sendEmbed(channel: discord.GuildTextBasedChannel, embed: discord.EmbedBuilder) {
-    try {
-        await channel.send({ embeds: [embed] });
-    } catch (e) {
-        console.log(`Failed to send embed message`);
-        console.error(e);
-    }
+    return channel.send({ embeds: [embed] }).catch((reason: string) => {
+        const errorMessage = `Failed to send embed message: ${reason}`;
+        console.error(errorMessage);
+        return Promise.reject(errorMessage);
+    });
 }
 
 /**

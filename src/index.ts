@@ -6,6 +6,11 @@ import { checkDanbooru } from './booru/danbooru';
 import { BooruConfig, minutes } from './utils';
 import { ActivityType, GatewayIntentBits, Partials } from 'discord.js';
 
+if (process.argv[2] !== "fromSh") {
+    console.log("Make sure to run this bot using 'bash runner.sh' instead.");
+    process.exit(123);
+}
+
 const bot = new discord.Client({
     intents: [
         GatewayIntentBits.Guilds,
