@@ -64,5 +64,5 @@ async function fetchDanbooruFeed(tag: string): Promise<DanbooruImage[]> {
 
 function isAcceptableDanbooruImage(image: DanbooruImage, config: BooruConfig) {
     const tags: string[] = (image.tag_string ?? '').split(' ');
-    return (['s', 'q', 'e'].includes(image.rating) && tags.every(tag => !config.bannedTags.includes(tag)));
+    return (['s', 'q', 'e'].includes(image.rating) && tags.every(tag => !(config.bannedTags ?? []).includes(tag)));
 }

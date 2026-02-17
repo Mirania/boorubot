@@ -28,7 +28,7 @@ bot.on("ready", async () => {
     bot.user.setActivity(`📚 ~ Reading booru ... ~`, { type: ActivityType.Custom });
     console.log("Bot is online.");
 
-    const configs: BooruConfig = await get("booru/config");
+    const configs: BooruConfig = await get(process.env.DEBUG === "true" ? "booru/testconfig" : "booru/config");
     checkGelbooru(configs); setInterval(() => checkGelbooru(configs), minutes(15));
     //checkDanbooru(configs); setInterval(() => checkDanbooru(configs), minutes(15));
 })

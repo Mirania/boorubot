@@ -13,7 +13,9 @@ interface GelbooruImage {
     id: number,
     tags: string,
     rating: string,
-    file_url: string
+    file_url: string,
+    preview_url: string,
+    source?: string
 }
 
 export async function checkGelbooru(config: BooruConfig) {
@@ -34,9 +36,13 @@ export async function checkGelbooru(config: BooruConfig) {
                     .setColor(0xA67AC1)
                     .setTitle(`New '${repost.tag}' post | Gelbooru`)
                     .setURL(gelbooruPostLink.replace("{id}", response[i].id.toString()))
-                    .setImage(response[i].file_url)
+                    .setImage(response[i].preview_url)
                     .setTimestamp()
                     .setFooter({ text: 'Click the title to see the full image' });
+
+                if (response[i].source) {
+                    embed.setDescription(`Sourced from ${response[i].source}`);
+                }
 
                 console.log(`Posting gelbooru image ${response[i].id}.`);
                 await sendEmbed(channel, embed);
@@ -66,5 +72,5 @@ async function fetchGelbooruFeed(tag: string): Promise<GelbooruImage[]> {
 
 function isAcceptableGelbooruImage(image: GelbooruImage, config: BooruConfig) {
     const tags: string[] = (image.tags ?? '').split(' ');
-    return (['sensitive', 'questionable', 'explicit'].includes(image.rating) && tags.every(tag => !config.bannedTags.includes(tag)));
+    return (['sensitive', 'questionable', 'explicit'].includes(image.rating) && tags.every(tag => !(config.bannedTags ?? []).includes(tag)));
 }
