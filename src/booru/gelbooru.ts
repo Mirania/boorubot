@@ -1,7 +1,7 @@
 import axios from "axios";
 import { self } from "..";
 import { get, post } from "../firebase-module";
-import { BooruConfig, sendEmbed } from "../utils";
+import { BooruConfig, BooruConfigRepost, currentTimeFormatted, sendEmbed, sendMessage } from "../utils";
 import { EmbedBuilder, GuildTextBasedChannel } from "discord.js";
 
 const gelbooruApiLink = "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=10&tags={tag}";
@@ -32,22 +32,7 @@ export async function checkGelbooru(config: BooruConfig) {
             if (response[i].id <= lastSeenId) continue;
 
             if (isAcceptableGelbooruImage(response[i], config)) {
-                const embed = new EmbedBuilder()
-                    .setColor(0xA67AC1)
-                    .setTitle(`New '${repost.tag}' post | Gelbooru`)
-                    .setURL(gelbooruPostLink.replace("{id}", response[i].id.toString()))
-                    .setImage(response[i].preview_url)
-                    .setTimestamp()
-                    .setFooter({ text: 'Click the title to see the full image' });
-
-                if (response[i].source) {
-                    embed.setDescription(`Sourced from ${response[i].source}`);
-                }
-
-                console.log(`Posting gelbooru image ${response[i].id}.`);
-                await sendEmbed(channel, embed);
-            } else {
-                console.log(`Skipping gelbooru image ${response[i].id} ...`);
+                await buildImageMessageAndSend(repost, response[i], channel);
             }
 
             if (i === 0) {
@@ -55,6 +40,37 @@ export async function checkGelbooru(config: BooruConfig) {
                 console.log(`Last seen for gelbooru tag '${repost.tag}' is now ${response[i].id}.`);
             }
         }
+    }
+}
+
+function buildImageMessageAndSend(repost: BooruConfigRepost, image: GelbooruImage, channel: GuildTextBasedChannel): Promise<any> {
+    const title = `New '${repost.tag}' post | Gelbooru`;
+
+    if (image.source && (image.source.includes("//x.com/") || image.source.includes("//twitter.com/") || image.source.includes("//www.pixiv.net/"))) {
+        // this will be a regular text message, leave the embedding to discord
+        const imageUrl = image.source.replace("//x.com/", "//fxtwitter.com/")
+                .replace("//twitter.com/", "//fxtwitter.com/")
+                .replace("//www.pixiv.net/", "//www.phixiv.net/");
+        const message = `**${title}**\n:pencil: Sourced from ${imageUrl}\n-# Click the link to see the source • Today at ${currentTimeFormatted()}`;
+
+        console.log(`Posting gelbooru image ${image.id} as a regular message.`);
+        return sendMessage(channel, message);
+    } else {
+        // this will be a custom embed
+        const embed = new EmbedBuilder()
+            .setColor(0xA67AC1)
+            .setTitle(title)
+            .setURL(gelbooruPostLink.replace("{id}", image.id.toString()))
+            .setImage(image.preview_url)
+            .setTimestamp()
+            .setFooter({ text: 'Click the title to see the full image' });
+
+        if (image.source) {
+            embed.setDescription(`:pencil: Sourced from ${image.source}`);
+        }
+
+        console.log(`Posting gelbooru image ${image.id} as a custom embed.`);
+        return sendEmbed(channel, embed);
     }
 }
 
