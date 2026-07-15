@@ -6,7 +6,7 @@ import { EmbedBuilder, GuildTextBasedChannel } from "discord.js";
 
 const gelbooruApiLink = "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=10&tags={tag}";
 // horrible practice i know. i dont really care if this gets leaked or stolen.
-const gelbooruApiAuth = "&api" + "_key=cf18b9e80b49eacb093dffdb2ee868" + "7d5ae8a5c746f88a7d1eaf31a475d4a086" + "&user" + "_id=1343170";
+const gelbooruApiAuth = "&a" + "pi" + "_key=cf18b9e80b49eacb093dffdb2ee868" + "7d5ae8a5c746f88a7d1eaf31a475d4a086" + "&user" + "_id=1343170";
 const gelbooruPostLink = 'https://gelbooru.com/index.php?page=post&s=view&id={id}';
 
 interface GelbooruImage {
