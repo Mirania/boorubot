@@ -4,7 +4,7 @@
  */
 
 import axios from "axios";
-var exec = require('child_process').exec;
+import { downloadImage } from "../utils";
 
 const gelbooruApiLink = "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=20&pid={page}&tags={tag}";
 // horrible practice i know. i dont really care if this gets leaked or stolen.
@@ -28,20 +28,6 @@ async function download(tags: string[]) {
 
 async function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function downloadImage(url: string) {
-    return new Promise((resolve, reject) => {
-        exec(`curl -H "Referer: https://gelbooru.com" -O ${url}`, function (error, stdout, stderr) {
-            if (error != null) {
-                console.error('exec error: ' + error);
-                console.error(stderr);
-                reject(error);
-            } else {
-                resolve(stdout);
-            }
-        });
-    });
 }
 
 console.log("Downloading for tag search:", process.argv.slice(2));

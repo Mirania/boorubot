@@ -1,8 +1,9 @@
 import axios from "axios";
+import * as fs from "fs";
 import { self } from "..";
 import { get, post } from "../firebase-module";
-import { BooruConfig, BooruConfigRepost, currentTimeFormatted, sendEmbed, sendMessage } from "../utils";
-import { EmbedBuilder, GuildTextBasedChannel } from "discord.js";
+import { BooruConfig, BooruConfigRepost, currentTimeFormatted, downloadImage, sendEmbed, sendMessage } from "../utils";
+import { AttachmentBuilder, EmbedBuilder, GuildTextBasedChannel } from "discord.js";
 
 const gelbooruApiLink = "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=10&tags={tag}";
 // horrible practice i know. i dont really care if this gets leaked or stolen.
@@ -15,6 +16,7 @@ interface GelbooruImage {
     rating: string,
     file_url: string,
     preview_url: string,
+    image: string, // this is a filename
     source?: string
 }
 
@@ -43,7 +45,7 @@ export async function checkGelbooru(config: BooruConfig) {
     }
 }
 
-function buildImageMessageAndSend(repost: BooruConfigRepost, image: GelbooruImage, channel: GuildTextBasedChannel): Promise<any> {
+async function buildImageMessageAndSend(repost: BooruConfigRepost, image: GelbooruImage, channel: GuildTextBasedChannel): Promise<any> {
     const title = `New '${repost.tag}' post | Gelbooru`;
 
     if (image.source && (image.source.includes("//x.com/") || image.source.includes("//twitter.com/") || image.source.includes("//www.pixiv.net/"))) {
@@ -61,16 +63,34 @@ function buildImageMessageAndSend(repost: BooruConfigRepost, image: GelbooruImag
             .setColor(0xA67AC1)
             .setTitle(title)
             .setURL(gelbooruPostLink.replace("{id}", image.id.toString()))
-            .setImage(image.preview_url)
             .setTimestamp()
             .setFooter({ text: 'Click the title to see the full image' });
 
-        if (image.source) {
-            embed.setDescription(`:pencil: Sourced from ${image.source}`);
-        }
+        try {
+            // need to download and embed the image manually
+            await downloadImage(image.file_url);
+            const file = new AttachmentBuilder(`./${image.image}`);
+            embed.setImage(`attachment://${image.image}`);
 
-        console.log(`Posting gelbooru image ${image.id} as a custom embed.`);
-        return sendEmbed(channel, embed);
+            if (image.source) {
+                embed.setDescription(`:pencil: Sourced from ${image.source}`);
+            }
+
+            console.log(`Posting gelbooru image ${image.id} as a custom embed.`);
+            const sent = await sendEmbed(channel, embed, file);
+            cleanupFile(image);
+            return sent;
+        } catch (e) {
+            console.error(`Failed to make a custom embed for image ${image.id}`);
+            console.error(e);
+            cleanupFile(image);
+        }
+    }
+}
+
+function cleanupFile(image: GelbooruImage): void {
+    if (fs.existsSync(`./${image.image}`)) {
+        fs.unlinkSync(`./${image.image}`);
     }
 }
 
@@ -80,7 +100,7 @@ async function fetchGelbooruFeed(tag: string): Promise<GelbooruImage[]> {
     try {
         return (await axios.get(url))?.data?.post ?? [];
     } catch (e) {
-        console.log(`Failed to query ${url}`);
+        console.error(`Failed to query ${url}`);
         console.error(e);
         return [];
     }
